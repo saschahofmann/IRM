@@ -3,7 +3,7 @@ from __future__ import division
 from matplotlib import pyplot as plt
 import numpy as np
 import cv2
-from scipy.optimize import fsolve
+from scipy.optimize import curve_fit
 from PIL import Image
 from mpl_toolkits.mplot3d import Axes3D
 import skimage.io as io
@@ -52,15 +52,20 @@ def dwh(I1, I2, D1, S1, D2, S2, w1, w2, n):
     h = w1**2 * w2/(4*np.pi*n*( w1**2 - w2**2)) * (np.arccos((S2 - 2*I2)/D2) 
                                  + w2/w1*np.arccos((S1 - 2*I1)/D1))
     return h
+def func(X, y0, A, h0 ):
+    h, n1, w1 = X
+    return y0 - A *np.cos(4*n1*np.pi/w1*(h-h0))
 
-def multiple_interfaces(h, w,n0,n1,n2,n3, dm, S , D):
+def multiple_interfaces(h, w,n0,n1,n2,n3, dm):
+    r01 = (n0 - n1)/(n0 + n1)
     r12 = (n1 - n2)/ (n1+n2)
     r23 = (n2- n3)/ (n2+n3)
-    gamma = r23/r12*(1-r12**2)
-    delta = 4*np.pi*n2 * dm/w
-    h0 = - w/(4*np.pi*n1)*np.arctan(gamma * np.sin(delta)/(1 + gamma*np.cos(delta)))
-    I = S/2 - D * np.cos(4*np.pi*n1/w*(h-h0))
-    return I
+    R_norm = np.absolute( 1 + (1 - r01**2)*np.exp(4j * np.pi* n1 *h/w)*((r12 + r23*(1 - 
+                       r12**2)*np.exp(4j * np.pi *n2*dm/w)))/r01)**2 - 1
+    X = (h, n1, w1)
+    popt, pcov = curve_fit(func, X, R_norm)
+    y0, A, h0 = popt                     
+    return y0, A, h0
     
 def dw(h, D1, S1, S2, D2, w1, w2, n):
     I1 = 0.5*(S1 - D1*np.cos(4*np.pi*n/ w1 * h ))
@@ -120,37 +125,28 @@ dm = 4
 
 # Calculate Max/Min via Fresnel Coefficients
 
-I11 = 1493.683
-I12 = 1446.922
-int_max1, int_min1 = mp_get_Max_and_Min(I11, n0, n1, n2, n3)
-int_max2, int_min2 = mp_get_Max_and_Min(I12, n0, n1, n2, n3)
+I11 = 1485.554
+I12 = 1497.267
+
 
 # Image In-read
 directory = 'Height Measurements/'
 filename = "1209_6x8_WT_006b.tif"
 original = io.imread(directory + filename)
-channel1 = original[0]
-channel2 = original[1]
-"""
-# Get Min/Max from Image
-int_min1 = np.min(channel1)
-int_max1 = np.max(channel1)
-int_min2 = np.min(channel2)
-int_max2 = np.max(channel2)
-"""
-D1 = int_max1 - int_min1
-S1 = int_max1 + int_min1
-D2 = int_max2 - int_min2
-S2 = int_max2 + int_min2
+channel1 = (original[0] -I11)/I11
+channel2 = (original[1] - I12)/I12
 
 
 # Distance with Shapely
 import shapely.geometry as geom
 
 h = np.linspace(0,200,2000)
-#I1, I2 = dw(h, D1, S1,S2, D2, w1, w2, n1)
-I1 = multiple_interfaces(h,w1, n0, n1, n2, n3, dm, S1, D1)
-I2 = multiple_interfaces(h,w2, n0, n1, n2, n3, dm, S2, D2)
+y01, A1, h01 = multiple_interfaces(h, w1, n0, n1, n2, n3, dm)
+y02, A2, h02 = multiple_interfaces(h, w2, n0, n1, n2, n3, dm)
+X1 = (h, n1, w1)
+X2 = (h, n1, w2)
+I1 = func(X1, y01, A1, h01)
+I2 = func(X2, y02, A2, h02)
 
 plt.figure(1)
 plt.plot(h, I1)
@@ -176,10 +172,12 @@ line = geom.LineString(z)
 point_on_line = np.zeros(channel1.shape)
 point_on_line2 = np.zeros(channel1.shape)
 height_img = np.zeros(channel1.shape)
+min1 = np.min(channel1) 
+min2 = np.min(channel2) 
 for i in range(channel1.shape[0]):
     print i
     for j in range(channel1.shape[1]):
-        if channel1[i,j] >= int_min1 and channel2[i,j] >= int_min2:
+        if channel1[i,j] >= min1 and channel2[i,j] >= min2:
             point = geom.Point(channel1[i,j], channel2[i,j])
             points = line.interpolate(line.project(point))
             point_on_line[i,j] = points.x
@@ -212,7 +210,7 @@ try:
         add_colorbar(im)
         
             
-            
+
 except KeyboardInterrupt:
     pass
 #im = ax[0].imshow(height_img, cmap = 'inferno')
@@ -233,7 +231,7 @@ except KeyboardInterrupt:
 #ax[1].set_aspect(1)
 #add_colorbar(im)
 
-# Save ac
+# Save as
 img = Image.fromarray(height_img)   # Creates a PIL-Image object
 save_name = filename.replace('.tif', '') + '_height.tif'
 img.save(directory + save_name)

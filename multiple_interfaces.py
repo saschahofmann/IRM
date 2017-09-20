@@ -29,16 +29,20 @@ r01 = (n0 - n1)/(n0 + n1)
 r12 = (n1 - n2)/ (n1+n2)
 r23 = (n2- n3)/ (n2+n3)
 h = np.linspace(0,200,2000)
-R_norm = abs( 1 + ((1 - r01**2)*np.exp(4j * np.pi* n1 *h/w1)*(r12 + r23*(1 - 
-                   r12**2)*np.exp(4j * np.pi *dm/w1)))**2/r01) -1
-
-
+R_norm = np.absolute( 1 + (1 - r01**2)*np.exp(4j * np.pi* n1 *h/w1)*((r12 + r23*(1 - 
+                   r12**2)*np.exp(4j * np.pi *n2*dm/w1)))/r01)**2 - 1
 X = (h, n1, w1)
 popt, pcov = curve_fit(func, X, R_norm)
-print pcov
-y0, A, h0 = popt
-y0 = np.max(R_norm) + np.min(R_norm)
-A = np.max(R_norm) - np.min(R_norm)
-R_norm2 = func(X, y0, A, h0)
-plt.plot(h, R_norm)
-plt.plot(h, R_norm2)
+y01, A1, h01 = popt
+X2 =(h, n1, w2)
+R_norm2 = np.absolute( 1 + (1 - r01**2)*np.exp(4j * np.pi* n1 *h/w2)*((r12 + r23*(1 - 
+                   r12**2)*np.exp(4j * np.pi *n2*dm/w2)))/r01)**2 - 1
+popt, pcov = curve_fit(func, X, R_norm2)
+y0 = r23/r12*(1-r12**2)
+d2 = 4*np.pi*n2*dm/w1
+A = 2*r12/r01*(r01**2-1)*np.sqrt(1 +  y0**2 + 2 *y0*np.cos(d2))
+h0 = - w1/(4*np.pi*n1)*np.arctan(y0 * np.sin(d2)/(1 + y0*np.cos(d2)))
+
+
+plt.figure(1)
+plt.plot(R_norm, R_norm2)
