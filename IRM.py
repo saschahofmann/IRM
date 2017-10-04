@@ -24,135 +24,75 @@ def add_colorbar(im, aspect=20, pad_fraction=0.5, **kwargs):
     plt.sca(current_ax)
     return im.axes.figure.colorbar(im, cax=cax, **kwargs)
 
-def IncidentIntensity(I1, n0, n1):
-    inc_int = I1/((n1 - n0)/(n1 + n0))**2
-    return inc_int
-
-def get_Max_and_Min(I1, n0, n1, n2):
-    # Correct for PDMS-Glass interface
-
-    I0 = IncidentIntensity(I1, n0, n1)
-    I2 = (I0-I1)*((n1-n2)/(n1+n2))**2
-    I_max = I1 + I2 + 2 * np.sqrt(I1*I2)
-    I_min = I1 + I2 - 2 * np.sqrt(I1*I2)
-    print I0, I2
-    return I_max, I_min
-    
 
 
-def height(I, D, S, w, n):
-    quotient = (S-2*I)/D
-    h = np.zeros(I.shape)
-    mask = abs(quotient ) <= 1
-    h[mask] = w/(4*np.pi*n)*np.arccos(quotient[mask])
-    return h
-
-
-def dwh(I1, I2, D1, S1, D2, S2, w1, w2, n):
-    h = w1**2 * w2/(4*np.pi*n*( w1**2 - w2**2)) * (np.arccos((S2 - 2*I2)/D2) 
-                                 + w2/w1*np.arccos((S1 - 2*I1)/D1))
-    return h
-def func(X, y0, A, h0 ):
-    h, n1, w1 = X
-    return y0 - A *np.cos(4*n1*np.pi/w1*(h-h0))
-
-def multiple_interfaces(h, w,n0,n1,n2,n3, dm):
-    r01 = (n0 - n1)/(n0 + n1)
-    r12 = (n1 - n2)/ (n1+n2)
-    r23 = (n2- n3)/ (n2+n3)
-    R_norm = np.absolute( 1 + (1 - r01**2)*np.exp(4j * np.pi* n1 *h/w)*((r12 + r23*(1 - 
-                       r12**2)*np.exp(4j * np.pi *n2*dm/w)))/r01)**2 - 1
-    X = (h, n1, w1)
-    popt, pcov = curve_fit(func, X, R_norm)
-    y0, A, h0 = popt                     
-    return y0, A, h0
-    
-def dw(h, D1, S1, S2, D2, w1, w2, n):
-    I1 = 0.5*(S1 - D1*np.cos(4*np.pi*n/ w1 * h ))
-    # Initial I2
-    I2 = 0.5*(S2 - D2*np.cos(4*np.pi*n/ w2 * h ))
-    # Formula derived in the paper
-    # I2 = D1 - S2 * np.cos(w1/w2 * np.arccos((D2 - I1)/S1))
-    # h from I1 substituted in I2
-    #I3 = (S2 - D2 * np.cos(w1/w2 * np.arccos((S1 - 2*I1)/D1)))/2
-    # I2 derived from substituting the periodicity summand
-    #I3 = 0.5*(S2 - D2 * np.cos(4*np.pi*n*h*(w1**2 -w2**2)/(w1**2*w2)
-    #                           + w2/w1 * arccos((S1 - 2*I1)/D1, h, w1/(4*n))))
-    return I1,I2
-
-def arccos(x, h, p):
-    y = np.arccos(x)
-    for i in range(1,int(round(h.max()/p + 0.5))):
-        if i%2 != 0:
-            y[h>= i * p] = (i+1) * np.pi - np.arccos(x[h>= i* p])
-        else:
-            y[h>= i * p] = i * np.pi + np.arccos(x[h>= i*p])
-
-    return y
-
-def theoretic_Intensity(h,n, S, D, w):
-    return  0.5*(S - D*np.cos(4*np.pi*n/ w * h ))
-
-def minimize_height(w1, w2, I1, I2, S1, D1, S2, D2, n):
-    k = np.outer(np.arange(6), np.ones(6))
-    h1 = w1/(4*np.pi* n)*(np.arccos((S1 - 2*I1)/D1) + k * w1/(2*n))
-    h2 = w2/(4*np.pi* n)*(np.arccos((S2 - 2*I2)/D2) + k.T * w2/(2*n))
-    min_ind = np.unravel_index(np.argmin(abs(h1 - h2)), h1.shape)
-    h = (h1[min_ind]+ h2[min_ind])/2
-    return h, abs(k[min_ind] )
-
-def mp_get_Max_and_Min(I1, n0, n1, n2, n3):
-
-    I0 = IncidentIntensity(I1, n0, n1)
-    I2 = (I0-I1)*((n1-n2)/(n1+n2))**2
-    I3 = (I0 - I1 - I2)*((n2-n3)/(n2+n3))**2
-    I_max = I1 + I2 + I3 + 2 * np.sqrt(I1*I2) + 2 * np.sqrt(I1*I3) + 2*np.sqrt(I2*I3)
-    I_min = I1 + I2 - (2 * np.sqrt(I1*I2) + 2 * np.sqrt(I1*I3) + 2*np.sqrt(I2*I3))
-    return I_max, I_min
-
-def res(h, I1, I2, S1, D1, S2, D2, w1, w2, n):
-    res = np.sqrt((I1 - theoretic_Intensity(h, n1, S1, D1, w1))**2 
-                        + (I2 - theoretic_Intensity(h, n, S2, D2, w2))**2)
-    return res
 # Refractive Index and wave lengths
-n0 = 1.515
+n0 = 1.525    # https://us.vwr.com/assetsvc/asset/en_US/id/17619754/contents
 n1 = 1.34
 n2 = 1.486
-n3 = 1.37
+n3 = 1.36     # http://onlinelibrary.wiley.com/store/10.1002/cyto.a.20134/asset/20134_ftp.pdf?v=1&t=j809eogl&s=adcee703002c2b2030641711cd89e2b5fe800d94&systemMessage=Wiley+Online+Library+will+be+unavailable+on+Saturday+7th+Oct+from+03.00+EDT+%2F+08%3A00+BST+%2F+12%3A30+IST+%2F+15.00+SGT+to+08.00+EDT+%2F+13.00+BST+%2F+17%3A30+IST+%2F+20.00+SGT+and+Sunday+8th+Oct+from+03.00+EDT+%2F+08%3A00+BST+%2F+12%3A30+IST+%2F+15.00+SGT+to+06.00+EDT+%2F+11.00+BST+%2F+15%3A30+IST+%2F+18.00+SGT+for+essential+maintenance.+Apologies+for+the+inconvenience+caused+.
 w1 = 488
 w2 = 635
 dm = 4 
+ina = 1.2
+method = 'INA_MP'
 
-# Calculate Max/Min via Fresnel Coefficients
+
 
 I11 = 1485.554
 I12 = 1497.267
-
-
 # Image In-read
 directory = 'Height Measurements/'
 filename = "1209_6x8_WT_006b.tif"
 original = io.imread(directory + filename)
-channel1 = (original[0] -I11)/I11
-channel2 = (original[1] - I12)/I12
+channel1 = original[0] 
+channel2 = original[1] 
+if method =='MP':
+    import mp
+    height_img = mp.MP(channel1, channel2, I11, I12, n0, n1, n2, n3 ,w1, w2, dm)
+    
+elif method == 'normal':
+    import minmax
+    height_img = minmax.minmaxmethod(channel1, channel2, I11, I12, n0, n1, n3, w1, w2)
+    
+elif method == 'INA':
+    import INA
+    height_img = INA.INA(channel1, channel2, ina, I11, I12, n0, n1, n3 ,w1, w2)
+elif method =='INA_MP':
+    import mp_ina
+    height_img, I1, I2, channel1, channel2 = mp_ina.inamp_main(channel1, channel2, I11, I12, n0, n1, n2, n3 ,w1, w2, dm, ina)
+    
+    
+# Save as
+img = Image.fromarray(height_img)   # Creates a PIL-Image object
+save_name = filename.replace('.tif', '') + '_height.tif'
+img.save(directory + save_name)
 
 
-# Distance with Shapely
-import shapely.geometry as geom
+fig, ax = plt.subplots(2,1, figsize=(16, 16))
+ax[0].imshow(height_img, cmap = 'inferno')
+import matplotlib.patches as patches
+try:
+    while True:
+        xy = plt.ginput(2)
+        xlength = xy[1][0] -xy[0][0]
+        ylength =xy[1][1]- xy[0][1]
+        rect = patches.Rectangle(xy[0], xlength, ylength, fill = False)
+        ax[0].add_patch(rect)
+        section1 = channel1[int(xy[0][1]): int(xy[1][1]), int(xy[0][0]): int(xy[1][0])]
+        section2 = channel2[int(xy[0][1]): int(xy[1][1]), int(xy[0][0]): int(xy[1][0])]
+        ax[1].clear()
+        ax[1].plot(section1,section2, ls = '', marker = ',')
+        ax[1].plot(I1, I2)
+        ax[1].set_aspect(1)
+        ax[1].axis([np.min(channel1), np.max(channel1), np.min(channel2), np.max(channel2)])
+        
+except KeyboardInterrupt:
+    pass
 
-h = np.linspace(0,200,2000)
-y01, A1, h01 = multiple_interfaces(h, w1, n0, n1, n2, n3, dm)
-y02, A2, h02 = multiple_interfaces(h, w2, n0, n1, n2, n3, dm)
-X1 = (h, n1, w1)
-X2 = (h, n1, w2)
-I1 = func(X1, y01, A1, h01)
-I2 = func(X2, y02, A2, h02)
 
-plt.figure(1)
-plt.plot(h, I1)
-plt.plot(h, I2)
-plt.show()
 """
+#Density plot
 I1, I2 = dw(h, 3300, 4800,5200, 3650, w1, w2, n1)
 x = channel1.flatten()
 y = channel2.flatten()
@@ -166,76 +106,6 @@ x, y, z = x[idx], y[idx], z[idx]
 fig, ax = plt.subplots()
 ax.scatter(x, y, c=z, s=2, edgecolor='')
 ax.plot(I1,I2)
-"""
-z = np.column_stack((I1, I2, h))
-line = geom.LineString(z)
-point_on_line = np.zeros(channel1.shape)
-point_on_line2 = np.zeros(channel1.shape)
-height_img = np.zeros(channel1.shape)
-min1 = np.min(channel1) 
-min2 = np.min(channel2) 
-for i in range(channel1.shape[0]):
-    print i
-    for j in range(channel1.shape[1]):
-        if channel1[i,j] >= min1 and channel2[i,j] >= min2:
-            point = geom.Point(channel1[i,j], channel2[i,j])
-            points = line.interpolate(line.project(point))
-            point_on_line[i,j] = points.x
-            point_on_line2[i,j] = points.y
-            height_img[i,j] = points.z
-#height_img[height_img>65] = 65
-#height_img[height_img< 15]= 15           
-x1 = channel1.flatten()
-x2 = point_on_line.flatten()
-y1 = channel2.flatten()
-y2 = point_on_line2.flatten()
-fig, ax = plt.subplots(2,1, figsize=(16, 16))
-import matplotlib.patches as patches
-try:
-    while True:
-        im = ax[0].imshow(height_img, cmap = 'inferno')
-        xy = plt.ginput(2)
-        xlength = xy[1][0] -xy[0][0]
-        ylength =xy[1][1]- xy[0][1]
-        rect = patches.Rectangle(xy[0], xlength, ylength, fill = False)
-        print rect
-        ax[0].add_patch(rect)
-        section1 = channel1[int(xy[0][1]): int(xy[1][1]), int(xy[0][0]): int(xy[1][0])]
-        section2 = channel2[int(xy[0][1]): int(xy[1][1]), int(xy[0][0]): int(xy[1][0])]
-        ax[1].clear()
-        ax[1].plot(section1,section2, ls = '', marker = ',')
-        plt.plot(I1, I2)
-        ax[1].set_aspect(1)
-        ax[1].axis([np.min(channel1), np.max(channel1), np.min(channel2), np.max(channel2)])
-        add_colorbar(im)
-        
-            
-
-except KeyboardInterrupt:
-    pass
-#im = ax[0].imshow(height_img, cmap = 'inferno')
-#xy = plt.ginput(2)
-#xlength = xy[1][0] -xy[0][0]
-#ylength =xy[1][1]- xy[0][1]
-#rect = patches.Rectangle(xy[0], xlength, ylength, fill = False)
-#print rect
-#ax[0].add_patch(rect)
-#section1 = channel1[int(xy[0][1]): int(xy[1][1]), int(xy[0][0]): int(xy[1][0])]
-#section2 = channel2[int(xy[0][1]): int(xy[1][1]), int(xy[0][0]): int(xy[1][0])]
-#ax[1].plot(section1,section2, ls = '', marker = ',')
-##ax[1].plot(I1, I2)
-##ax[1].plot([x1, x2], [y1, y2],c = 'r' , alpha = 0.5)
-##ax[1].scatter(x1, y1, marker='+', c = 'b')
-##ax[1].scatter(x2, y2, marker='+', c = 'g')
-##ax[1].axis([np.min((int_min2, int_min1)),np.max((int_max1, int_max2)), np.min((int_min2, int_min1)),np.max((int_max1, int_max2))])
-#ax[1].set_aspect(1)
-#add_colorbar(im)
-
-# Save as
-img = Image.fromarray(height_img)   # Creates a PIL-Image object
-save_name = filename.replace('.tif', '') + '_height.tif'
-img.save(directory + save_name)
-
 #fig, ax = plt.subplots(3,1, figsize=(16, 16))
 #ax[0].imshow(channel1, cmap = 'gray')
 #ax[0].axis( 'off')
@@ -245,7 +115,8 @@ img.save(directory + save_name)
 #ax[2].axis( 'off')
 #add_colorbar(im)
 #plt.savefig('irm_image.pdf', format ='pdf', dpi =1000)
-"""
+
+
 # For Loop-Plot with Scipy
 height_img = np.zeros(channel1.shape)
 for i in range(channel1.shape[0]):
