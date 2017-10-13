@@ -49,15 +49,15 @@ channel1 = original[0]
 channel2 = original[1] 
 if method =='MP':
     import mp
-    height_img = mp.MP(channel1, channel2, I11, I12, n0, n1, n2, n3 ,w1, w2, dm)
+    height_img, I1, I2, channel1, channel2  = mp.MP(channel1, channel2, I11, I12, n0, n1, n2, n3 ,w1, w2, dm)
     
 elif method == 'normal':
     import minmax
-    height_img = minmax.minmaxmethod(channel1, channel2, I11, I12, n0, n1, n3, w1, w2)
+    height_img, I1, I2, channel1, channel2  = minmax.minmaxmethod(channel1, channel2, I11, I12, n0, n1, n3, w1, w2)
     
 elif method == 'INA':
     import INA
-    height_img = INA.INA(channel1, channel2, ina, I11, I12, n0, n1, n3 ,w1, w2)
+    height_img, I1, I2, channel1, channel2 = INA.INA(channel1, channel2, ina, I11, I12, n0, n1, n3 ,w1, w2)
 elif method =='INA_MP':
     import mp_ina
     height_img, I1, I2, channel1, channel2 = mp_ina.inamp_main(channel1, channel2, I11, I12, n0, n1, n2, n3 ,w1, w2, dm, ina)

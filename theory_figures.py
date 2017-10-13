@@ -21,7 +21,7 @@ n1 = 1.34
 n2 = 1.48
 n3 = 1.42
 w1 = 488
-w2 = 559
+w2 = 642
 
 # Theory plots
 h = np.linspace(0, 250, 1000)
@@ -53,24 +53,32 @@ I1, I2 = dw(h, 1, 1, 1, 1, w1, w2, n1 )
 #plt.savefig('irm_theory.pdf', format='pdf', dpi=1000)
 
 plt.figure(1)
-plt.plot(h, I1, c = "#369E4B")# 024EA0
-plt.plot(h, I2, c = "#be1621")
-plt.axes().set_aspect(1.,)
+plt.plot(h, I1, c = "#369E4B", label = str(w1) +' nm')# 024EA0
+plt.plot(h, I2, c = "#be1621", label = str(w2) +' nm' )
+#plt.axes().set_aspect(1.,)
 plt.xlim(0,h.max())
 plt.ylim(0,1.1)
-plt.xlabel(r'$\lambda$ [nm]')
+plt.xlabel('d [nm]')
 plt.ylabel('Normalised Intensity')
+plt.legend(loc = 1)
 plt.savefig('irm_twosine.pdf', format='pdf', dpi=1000)
 
 plt.figure(2)
-plt.plot(I1, I2, c ='black')
+n1 = [1.32, 1.33, 1.34, 1.36, 1.38]
+color = ['b', 'r', 'g', 'violet', 'y']
+for i in xrange(len(n1)):
+
+    I1, I2 = dw(h, 1, 1, 1, 1, w1, w2, n1[i] )
+    plt.plot(I1, I2, c =color[i])
+
+    for j in [50,100,150, 200, 250]:
+    
+        ind = np.argmin(abs(j-h))
+        #plt.annotate(str(i), xy= (I1[ind], I2[ind]),  xytext = (I1[ind]-0.025, I2[ind]- 0.05) )
+        plt.plot(I1[ind], I2[ind], ls ='', marker ='+', markersize = 12,  c =color[i])
 plt.axes().set_aspect('equal',)
 
-for i in [50,100,150, 200, 250]:
-    
-    ind = np.argmin(abs(i-h))
-    #plt.annotate(str(i), xy= (I1[ind], I2[ind]),  xytext = (I1[ind]-0.025, I2[ind]- 0.05) )
-    plt.plot(I1[ind], I2[ind], ls ='', marker ='+', c ='black')
+
 #ind = np.where(h == 50)[0][0]
 #ind2 = np.where(h == 100)[0][0]
 #ind3 = np.where(h == 150)[0][0]
