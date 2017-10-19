@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+ sho#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 from __future__ import division
 from matplotlib import pyplot as plt
@@ -36,7 +36,7 @@ def INA(channel1, channel2, INA, I11, I12, n0, n1, n3 ,w1, w2):
     h = np.linspace(0.01,200,2000)
     I1 = ina_int(INA, h, w1, n1, S1, D1) 
     I2 = ina_int(INA, h, w2, n1, S2, D2)
-    plt.plot(I1,I2)    
+    
     z = np.column_stack((I1, I2, h))
     line = geom.LineString(z)
     point_on_line = np.zeros(channel1.shape)

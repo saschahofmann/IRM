@@ -29,66 +29,102 @@ def add_colorbar(im, aspect=20, pad_fraction=0.5, **kwargs):
 # Refractive Index and wave lengths
 n0 = 1.525    # https://us.vwr.com/assetsvc/asset/en_US/id/17619754/contents
 n1 = 1.34
-n2 = 1.486
-n3 = 1.36     # http://onlinelibrary.wiley.com/store/10.1002/cyto.a.20134/asset/20134_ftp.pdf?v=1&t=j809eogl&s=adcee703002c2b2030641711cd89e2b5fe800d94&systemMessage=Wiley+Online+Library+will+be+unavailable+on+Saturday+7th+Oct+from+03.00+EDT+%2F+08%3A00+BST+%2F+12%3A30+IST+%2F+15.00+SGT+to+08.00+EDT+%2F+13.00+BST+%2F+17%3A30+IST+%2F+20.00+SGT+and+Sunday+8th+Oct+from+03.00+EDT+%2F+08%3A00+BST+%2F+12%3A30+IST+%2F+15.00+SGT+to+06.00+EDT+%2F+11.00+BST+%2F+15%3A30+IST+%2F+18.00+SGT+for+essential+maintenance.+Apologies+for+the+inconvenience+caused+.
+n2 = 1.37
+n3 =  1.43 # http://onlinelibrary.wiley.com/store/10.1002/cyto.a.20134/asset/20134_ftp.pdf?v=1&t=j809eogl&s=adcee703002c2b2030641711cd89e2b5fe800d94&systemMessage=Wiley+Online+Library+will+be+unavailable+on+Saturday+7th+Oct+from+03.00+EDT+%2F+08%3A00+BST+%2F+12%3A30+IST+%2F+15.00+SGT+to+08.00+EDT+%2F+13.00+BST+%2F+17%3A30+IST+%2F+20.00+SGT+and+Sunday+8th+Oct+from+03.00+EDT+%2F+08%3A00+BST+%2F+12%3A30+IST+%2F+15.00+SGT+to+06.00+EDT+%2F+11.00+BST+%2F+15%3A30+IST+%2F+18.00+SGT+for+essential+maintenance.+Apologies+for+the+inconvenience+caused+.
 w1 = 488
 w2 = 635
 dm = 4 
-ina = 1.2
-method = 'INA_MP'
+ina = 1.3
+method = ['normal']
 
 
 
-I11 = 1485.554
-I12 = 1497.267
+I11 = 1441.183
+I12 = 2783.215
 # Image In-read
 directory = 'Height Measurements/'
-filename = "1209_6x8_WT_006b.tif"
+filename = "171110_05.tif"
 original = io.imread(directory + filename)
 channel1 = original[0] 
 channel2 = original[1] 
-if method =='MP':
+#mask = channel1 >= 300
+#int1 = channel1[mask]
+#int2 = channel2[mask]
+#img = np.zeros_like(channel1)
+#img[mask]=channel1[mask]
+
+#plt.imshow(img)
+
+
+height_img = None
+if 'MP' in method :
     import mp
     height_img, I1, I2, channel1, channel2  = mp.MP(channel1, channel2, I11, I12, n0, n1, n2, n3 ,w1, w2, dm)
-    
-elif method == 'normal':
+    img = Image.fromarray(height_img)   # Creates a PIL-Image object
+    save_name = filename.replace('.tif', '') + '_MP_height.tif'
+    img.save(directory +'/Results/'+ save_name)
+if 'normal' in method:
     import minmax
     height_img, I1, I2, channel1, channel2  = minmax.minmaxmethod(channel1, channel2, I11, I12, n0, n1, n3, w1, w2)
-    
-elif method == 'INA':
+    img = Image.fromarray(height_img)   # Creates a PIL-Image object
+    save_name = filename.replace('.tif', '') + '_normal_height.tif'
+    img.save(directory +'/Results/'+ save_name)
+if 'INA' in method:
     import INA
     height_img, I1, I2, channel1, channel2 = INA.INA(channel1, channel2, ina, I11, I12, n0, n1, n3 ,w1, w2)
-elif method =='INA_MP':
+    img = Image.fromarray(height_img)   # Creates a PIL-Image object
+    save_name = filename.replace('.tif', '') + '_INA_height.tif'
+    img.save(directory +'/Results/'+ save_name)
+if 'INA_MP' in method:
     import mp_ina
     height_img, I1, I2, channel1, channel2 = mp_ina.inamp_main(channel1, channel2, I11, I12, n0, n1, n2, n3 ,w1, w2, dm, ina)
+    img = Image.fromarray(height_img)   # Creates a PIL-Image object
+    save_name = filename.replace('.tif', '') + '_INA_MP_height.tif'
+    img.save(directory+'/Results/' + save_name)
     
-    
-# Save as
-img = Image.fromarray(height_img)   # Creates a PIL-Image object
-save_name = filename.replace('.tif', '') + '_height.tif'
-img.save(directory + save_name)
-
-
-fig, ax = plt.subplots(2,1, figsize=(16, 16))
-ax[0].imshow(height_img, cmap = 'inferno')
 import matplotlib.patches as patches
-try:
-    while True:
-        xy = plt.ginput(2)
-        xlength = xy[1][0] -xy[0][0]
-        ylength =xy[1][1]- xy[0][1]
-        rect = patches.Rectangle(xy[0], xlength, ylength, fill = False)
-        ax[0].add_patch(rect)
-        section1 = channel1[int(xy[0][1]): int(xy[1][1]), int(xy[0][0]): int(xy[1][0])]
-        section2 = channel2[int(xy[0][1]): int(xy[1][1]), int(xy[0][0]): int(xy[1][0])]
-        ax[1].clear()
-        ax[1].plot(section1,section2, ls = '', marker = ',')
-        ax[1].plot(I1, I2)
-        ax[1].set_aspect(1)
-        ax[1].axis([np.min(channel1), np.max(channel1), np.min(channel2), np.max(channel2)])
-        
-except KeyboardInterrupt:
-    pass
+fig, ax = plt.subplots(1,1)
+int1 = channel1[40:80, 140:240]
+int2 = channel2[40:80, 140:240]
+bg1 = channel1[100:120, 0:40]
+bg2 = channel2[100:120, 0:40]
+ax.axis([np.min(channel1), np.max(channel1), np.min(channel2), np.max(channel2)])
+ax.plot(int1, int2, ls ='', marker = '.',  ms = 0.4, mec = '#F34D3D', mfc = '#F34D3D' )
+ax.plot(bg1, bg2, ls ='', marker = '.',  ms = 0.4, mec = 'blue', mfc = 'blue' )
+ax.plot(I1,I2, c ='black')
+ax.set_title('Cell refractive index ' + str(n3))
+plt.savefig('irm_n_'+str(n3)+'.jpg', format='jpg', dpi = 500)
+
+fig2, ax2 = plt.subplots(1,1)
+ax2.imshow(channel1)    
+rect = patches.Rectangle((140,40),100,40, fill = False)
+ax2.add_patch(rect)
+rect2 = patches.Rectangle((0,100), 40, 20, fill = False)
+ax2.add_patch(rect2)
+height_img = None    
+# Choose field of plot
+if height_img != None:
+    if True:
+        fig, ax = plt.subplots(2,1, figsize=(16, 16))
+        ax[0].imshow(height_img, cmap = 'inferno')
+
+        try:
+            while False:
+                xy = plt.ginput(2)
+                xlength = xy[1][0] -xy[0][0]
+                ylength =xy[1][1]- xy[0][1]
+                rect = patches.Rectangle(xy[0], xlength, ylength, fill = False)
+                ax[0].add_patch(rect)
+                section1 = channel1[int(xy[0][1]): int(xy[1][1]), int(xy[0][0]): int(xy[1][0])]
+                section2 = channel2[int(xy[0][1]): int(xy[1][1]), int(xy[0][0]): int(xy[1][0])]
+                ax[1].clear()
+                ax[1].plot(section1,section2, ls = '', marker = ',')
+                ax[1].plot(I1, I2)
+                ax[1].set_aspect(1)
+                ax[1].axis([np.min(channel1), np.max(channel1), np.min(channel2), np.max(channel2)])
+                
+        except KeyboardInterrupt:
+            pass
 
 
 """

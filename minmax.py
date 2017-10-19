@@ -37,20 +37,22 @@ def minmaxmethod(channel1, channel2, I11, I12, n0, n1, n3 ,w1, w2):
     line = geom.LineString(z)
     point_on_line = np.zeros(channel1.shape)
     point_on_line2 = np.zeros(channel1.shape)
-    height_img = np.zeros(channel1.shape)
-    min1 = np.min(channel1) 
-    min2 = np.min(channel2) 
-    for i in range(channel1.shape[0]):
-        print i
-        for j in range(channel1.shape[1]):
-            if channel1[i,j] >= min1 and channel2[i,j] >= min2:
-                point = geom.Point(channel1[i,j], channel2[i,j])
-                points = line.interpolate(line.project(point))
-                point_on_line[i,j] = points.x
-                point_on_line2[i,j] = points.y
-                height_img[i,j] = points.z
-    #height_img[height_img>65] = 65
-    #height_img[height_img< 15]= 15           
+    height_img = np.zeros((4,4))
+#    height_img = np.zeros(channel1.shape)
+#    min1 = np.min(channel1) 
+#    min2 = np.min(channel2) 
+#
+#    for i in range(channel1.shape[0]):
+#        print i
+#        for j in range(channel1.shape[1]):
+#            if channel1[i,j] >= min1 and channel2[i,j] >= min2:
+#                point = geom.Point(channel1[i,j], channel2[i,j])
+#                points = line.interpolate(line.project(point))
+#                point_on_line[i,j] = points.x
+#                point_on_line2[i,j] = points.y
+#                height_img[i,j] = points.z
+#    #height_img[height_img>65] = 65
+#    #height_img[height_img< 15]= 15           
     
 
     return height_img, I1, I2, channel1, channel2
