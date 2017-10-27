@@ -54,7 +54,7 @@ I1, I2 = dw(h, 1, 1, 1, 1, w1, w2, n1 )
 
 plt.figure(1)
 plt.plot(h, I1, c = "#369E4B", label = str(w1) +' nm')# 024EA0
-plt.plot(h, I2, c = "#be1621", label = str(w2) +' nm' )
+#plt.plot(h, I2, c = "#be1621", label = str(w2) +' nm' )
 #plt.axes().set_aspect(1.,)
 plt.xlim(0,h.max())
 plt.ylim(0,1.1)
@@ -65,25 +65,24 @@ plt.savefig('irm_twosine.pdf', format='pdf', dpi=1000)
 
 plt.figure(2)
 n1 = [1.32, 1.33, 1.34, 1.36, 1.38]
-color = ['b', 'r', 'g', 'violet', 'y']
 for i in xrange(len(n1)):
 
-    I1, I2 = dw(h, 1, 1, 1, 1, w1, w2, n1[i] )
-    plt.plot(I1, I2, c =color[i])
+    I1, I2 = dw(h, 1, 1, 1, 1, w1, w2, n1[2] )
+    plt.plot(I1, I2, c = 'black')
 
     for j in [50,100,150, 200, 250]:
     
         ind = np.argmin(abs(j-h))
-        #plt.annotate(str(i), xy= (I1[ind], I2[ind]),  xytext = (I1[ind]-0.025, I2[ind]- 0.05) )
-        plt.plot(I1[ind], I2[ind], ls ='', marker ='+', markersize = 12,  c =color[i])
+        # plt.annotate(str(i), xy= (I1[ind], I2[ind]),  xytext = (I1[ind]-0.025, I2[ind]- 0.05) )
+        plt.plot(I1[ind], I2[ind], ls ='', marker ='+', markersize = 8,  c ='black')
 plt.axes().set_aspect('equal',)
 
 
-#ind = np.where(h == 50)[0][0]
-#ind2 = np.where(h == 100)[0][0]
-#ind3 = np.where(h == 150)[0][0]
-#ind4 = np.where(h == 200)[0][0]
-#ind5 = np.where(h == 250)[0][0]
+#ind = np.where(h == 50)
+#ind2 = np.where(h == 100)
+#ind3 = np.where(h == 150)
+#ind4 = np.where(h == 200)
+#ind5 = np.where(h == 250)
 #plt.annotate('50', xy = (I1[ind], I2[ind]) )
 #plt.annotate('100', xy = (I1[ind2], I2[ind2]))
 #plt.annotate('150', xy = (I1[ind3], I2[ind3]))

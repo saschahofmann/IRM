@@ -30,7 +30,7 @@ def add_colorbar(im, aspect=20, pad_fraction=0.5, **kwargs):
 n0 = 1.525    # https://us.vwr.com/assetsvc/asset/en_US/id/17619754/contents
 n1 = 1.34
 n2 = 1.37
-n3 =  1.43 # http://onlinelibrary.wiley.com/store/10.1002/cyto.a.20134/asset/20134_ftp.pdf?v=1&t=j809eogl&s=adcee703002c2b2030641711cd89e2b5fe800d94&systemMessage=Wiley+Online+Library+will+be+unavailable+on+Saturday+7th+Oct+from+03.00+EDT+%2F+08%3A00+BST+%2F+12%3A30+IST+%2F+15.00+SGT+to+08.00+EDT+%2F+13.00+BST+%2F+17%3A30+IST+%2F+20.00+SGT+and+Sunday+8th+Oct+from+03.00+EDT+%2F+08%3A00+BST+%2F+12%3A30+IST+%2F+15.00+SGT+to+06.00+EDT+%2F+11.00+BST+%2F+15%3A30+IST+%2F+18.00+SGT+for+essential+maintenance.+Apologies+for+the+inconvenience+caused+.
+n3 =  1.47 # http://onlinelibrary.wiley.com/store/10.1002/cyto.a.20134/asset/20134_ftp.pdf?v=1&t=j809eogl&s=adcee703002c2b2030641711cd89e2b5fe800d94&systemMessage=Wiley+Online+Library+will+be+unavailable+on+Saturday+7th+Oct+from+03.00+EDT+%2F+08%3A00+BST+%2F+12%3A30+IST+%2F+15.00+SGT+to+08.00+EDT+%2F+13.00+BST+%2F+17%3A30+IST+%2F+20.00+SGT+and+Sunday+8th+Oct+from+03.00+EDT+%2F+08%3A00+BST+%2F+12%3A30+IST+%2F+15.00+SGT+to+06.00+EDT+%2F+11.00+BST+%2F+15%3A30+IST+%2F+18.00+SGT+for+essential+maintenance.+Apologies+for+the+inconvenience+caused+.
 w1 = 488
 w2 = 635
 dm = 4 
@@ -84,32 +84,46 @@ if 'INA_MP' in method:
     
 import matplotlib.patches as patches
 fig, ax = plt.subplots(1,1)
-int1 = channel1[40:80, 140:240]
-int2 = channel2[40:80, 140:240]
+int1 = channel1[65:105, 110:170]
+int2 = channel2[65:105, 110:170]
 bg1 = channel1[100:120, 0:40]
 bg2 = channel2[100:120, 0:40]
+core1 = channel1[40:57, 165: 195]
+core2 = channel2[40:57, 165: 195]
+border1 = channel1[8:16, 50:100]
+border2 = channel2[8:16, 50:100]
+
 ax.axis([np.min(channel1), np.max(channel1), np.min(channel2), np.max(channel2)])
-ax.plot(int1, int2, ls ='', marker = '.',  ms = 0.4, mec = '#F34D3D', mfc = '#F34D3D' )
+ax.plot(int1, int2, ls ='', marker = '.',  ms = 0.4, mec = 'black', mfc = 'black' )
 ax.plot(bg1, bg2, ls ='', marker = '.',  ms = 0.4, mec = 'blue', mfc = 'blue' )
+ax.plot(border1, border2, ls = '', marker ='.',  ms = 0.4, mec = '#9e2d04', mfc = '#9e2d04')
+ax.plot(core1, core2, ls = '', marker ='.',  ms = 0.4, mec = 'gray', mfc = 'gray')
 ax.plot(I1,I2, c ='black')
 ax.set_title('Cell refractive index ' + str(n3))
 plt.savefig('irm_n_'+str(n3)+'.jpg', format='jpg', dpi = 500)
 
-fig2, ax2 = plt.subplots(1,1)
-ax2.imshow(channel1)    
-rect = patches.Rectangle((140,40),100,40, fill = False)
-ax2.add_patch(rect)
-rect2 = patches.Rectangle((0,100), 40, 20, fill = False)
-ax2.add_patch(rect2)
-height_img = None    
+#fig2, ax2 = plt.subplots(1,1)
+#ax2.imshow(height_img, cmap ='inferno')    
+#rect = patches.Rectangle((110,65),60,40, fill = False, color = 'black')
+#ax2.add_patch(rect)
+#rect2 = patches.Rectangle((0,100), 40, 20, fill = False, color = 'blue')
+#ax2.add_patch(rect2)
+#rect3 = patches.Rectangle((50,8), 50, 8, fill = False, color = '#9e2d04')
+#ax2.add_patch(rect3)
+#rect4 = patches.Rectangle((165, 40), 30, 17, fill = False, color = 'gray')
+#ax2.add_patch(rect4)
+#ax2.axis('off')
+#plt.savefig(filename+'heightpatches.jpg', format ='jpg', dpi = 500)
+
 # Choose field of plot
+height_img = None
 if height_img != None:
     if True:
         fig, ax = plt.subplots(2,1, figsize=(16, 16))
         ax[0].imshow(height_img, cmap = 'inferno')
 
         try:
-            while False:
+            while True:
                 xy = plt.ginput(2)
                 xlength = xy[1][0] -xy[0][0]
                 ylength =xy[1][1]- xy[0][1]
