@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Multiple Interefaces"""
 from __future__ import division
 from matplotlib import pyplot as plt
 import numpy as np
